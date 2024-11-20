@@ -22,7 +22,10 @@ const authSchema = mongoose.Schema({
     phone:{type:Number},
     adresse:{
         type:String
-    }
+    },
+//     likedBooks: [{
+//         type: mongoose.Schema.Types.ObjectId, 
+//         ref: 'Book' }]// En la coleccion de libros, uno puede elegir los libros que le gustan
 })
 
 module.exports = mongoose.model('auth',authSchema)

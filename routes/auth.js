@@ -1,82 +1,74 @@
-const express = require('express')
-
-const authRoute = express.Router()
-
-const authSchema = require('../model/auth')
+const express = require('express');
+const authRoute = express.Router();
+const authSchema = require('../model/auth');
+// const bookSchema = require('../model/Bookdata');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const {registerValidation,loginValidation,validation}=require('../middelware/RegisterValidation');
-const { isAuth } = require('../middelware/isAuth');
+const { registerValidation, loginValidation, validation } = require('../middelware/RegisterValidation');
+const { isAuth } = require('../middelware/isAuth'); 
 
+// Register Route
+authRoute.post('/register', registerValidation, validation, async (req, res) => {
+  try {
+    const { name, email, userName, password, role, phone, adresse } = req.body;
 
-
-// partie Register , 
-//=>http://localhost:5002/auth/register
-
-authRoute.post('/register',registerValidation,validation,async(req,res)=>{
-
-try{
-const {name,email,userName,password,role,phone,adresse}= req.body
-const foundAuth = await authSchema.findOne({email})
-
-if(foundAuth) {return res.status(404).json({msg:" el email deja mawjoud bara logi 3ych khouya ou okhty"})}
-
-const newAuth = await new authSchema(req.body)
-//bcrypt 
-const saltRounds = 10;
-const salt = bcrypt.genSaltSync(saltRounds);
-const hash = bcrypt.hashSync(password, salt);
-
-newAuth.password = hash 
-
-newAuth.save()
-res.status(200).json({msg:'welcome to ur note pad',newAuth})
-
-}catch(err){
-    console.log(err)
-}
-})
-//=>http://localhost:5002/auth/login
-
-authRoute.post('/login', loginValidation,validation,async (req, res) => {
-    try {
-      const { email, password } = req.body;
-      const foundAuth = await authSchema.findOne({ email });
-      if (!foundAuth) {
-        return res.status(404).json({ msg: "rak mkch msejel, bara register 3aych khouya ou okhty" });
-      }
-  
-      // Comparer le mot de passe fourni avec le mot de passe stocké
-      const match = await bcrypt.compare(password, foundAuth.password);
-      if (!match) {
-        return res.status(404).json({ msg: "rak ghalit fil mdsp mte3ik" });
-      }
-      // Création du token avec le payload
-      const payload = { id: foundAuth._id };
-      const token = jwt.sign(payload, process.env.privateKey);
-      res.status(200).json({ msg: "ur welcome, ya mar7abe", token, foundAuth });
-    } catch (err) {
-      console.log(err);
-      res.status(500).json({ msg: "Something went wrong, please try again." });
+    const foundAuth = await authSchema.findOne({ email });
+    if (foundAuth) {
+      return res.status(404).json({ msg: "El email ya está registrado, por favor regístrate" });
     }
-  });
 
+    const newAuth = new authSchema(req.body);
 
-//route get profil view profil 
-//http://localhost:5002/auth/myaccount
+    // Hash the password
+    const saltRounds = 10;
+    const salt = bcrypt.genSaltSync(saltRounds);
+    const hash = bcrypt.hashSync(password, salt);
+    newAuth.password = hash;
 
-authRoute.get('/account',isAuth,(req,res)=>{
-  try{
-res.send(req.user)
-  } catch(err){
-  console.log(err)
- }
-})
+    await newAuth.save();
+    res.status(200).json({ msg: 'Bienvenido a tu tienda de libros', newAuth });
 
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ msg: 'Error del servidor' });
+  }
+});
 
+// Login Route
+authRoute.post('/login', loginValidation, validation, async (req, res) => {
+  try {
+    const { email, password } = req.body;
 
+    const foundAuth = await authSchema.findOne({ email });
+    if (!foundAuth) {
+      return res.status(404).json({ msg: "Usuario no encontrado, por favor regístrate" });
+    }
 
+    // Check password match
+    const match = await bcrypt.compare(password, foundAuth.password);
+    if (!match) {
+      return res.status(404).json({ msg: "Contraseña incorrecta" });
+    }
 
+    // Create JWT token
+    const payload = { id: foundAuth._id };
+    const token = jwt.sign(payload, process.env.privateKey);
+    res.status(200).json({ msg: "Bienvenido", token, foundAuth });
 
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ msg: 'Error del servidor' });
+  }
+});
 
-module.exports = authRoute
+// Profile Route - Get user info
+authRoute.get('/account', isAuth, (req, res) => {
+  try {
+    res.send(req.user);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ msg: 'Error del servidor' });
+  }
+});
+
+module.exports = authRoute;

@@ -9,6 +9,8 @@ const noteRoute = require('./routes/book');
 const authRoute = require('./routes/auth');
 const cartRoute = require('./routes/cartRoutes');
 const reviewRoute = require("./routes/review"); 
+const orderRoutes = require('./routes/orderRoutes')
+const likedBooksRoute = require('./routes/likedBooksRoute');
 const cors = require('cors')
 // appel db
 db()
@@ -22,6 +24,10 @@ app.use('/auth',authRoute)
 app.use('/cart', cartRoute); 
 // review routes 
 app.use("/review", reviewRoute);
+// order routes
+app.use('/orders', orderRoutes);
+// liked books routes
+app.use('/likedBooks', likedBooksRoute);
 
 
 

@@ -21,7 +21,10 @@ const bookSchema = mongoose.Schema({
             'psychology'
         ], 
         required: true 
-    }
-});
+    },
+
+    
+    });
+
 
 module.exports = mongoose.model("Book", bookSchema);

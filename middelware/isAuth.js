@@ -1,3 +1,4 @@
+
 var jwt = require('jsonwebtoken');
 
 const authSchema = require('../model/auth')
